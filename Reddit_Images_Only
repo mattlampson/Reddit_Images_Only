@@ -1,0 +1,48 @@
+// ==UserScript==
+// @name         Reddit Images Only Toggle
+// @namespace    http://violentmonkey.github.io
+// @version      1.0
+// @description  Toggle to show only image posts on Reddit
+// @author       You
+// @match        *://*.reddit.com/*
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+    style.sheet.insertRule('body.hide-non-image-posts .Post:not([data-has-image="true"]) { display: none; }');
+
+    const button = document.createElement('button');
+    button.textContent = 'Images only?';
+    button.style.position = 'fixed';
+    button.style.top = '10px';
+    button.style.right = '10px';
+    button.style.zIndex = '9999';
+    button.addEventListener('click', () => {
+        document.body.classList.toggle('hide-non-image-posts');
+        updatePostsVisibility();
+    });
+    document.body.appendChild(button);
+
+    function updatePostsVisibility() {
+        document.querySelectorAll('.Post').forEach(post => {
+            if (post.querySelector('img.ImageBox-image')) {
+                post.setAttribute('data-has-image', 'true');
+            } else {
+                post.setAttribute('data-has-image', 'false');
+            }
+        });
+    }
+
+    // Run initially
+    updatePostsVisibility();
+
+    // Observe for changes in the feed
+    new MutationObserver(() => {
+        updatePostsVisibility();
+    }).observe(document, { childList: true, subtree: true });
+})();
